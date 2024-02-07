@@ -72,3 +72,4 @@ C:\Users\Paulina\Desktop\DB_Postgress\DB_Postgres\obj\Debug\net8.0\refint\DB_Pos
 C:\Users\Paulina\Desktop\DB_Postgress\DB_Postgres\obj\Debug\net8.0\DB_Postgres.pdb
 C:\Users\Paulina\Desktop\DB_Postgress\DB_Postgres\obj\Debug\net8.0\DB_Postgres.genruntimeconfig.cache
 C:\Users\Paulina\Desktop\DB_Postgress\DB_Postgres\obj\Debug\net8.0\ref\DB_Postgres.dll
+C:\Users\Paulina\Desktop\DB_Postgress\DB_Postgres\obj\Debug\net8.0\DB_Postgres.sourcelink.json

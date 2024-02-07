@@ -92,4 +92,18 @@ public class DatabaseController : ControllerBase
         return Ok($"Schema '{schema}' deleted successfully.");
     }
 
+    [HttpPost("activate-audit")]
+    public IActionResult ActivateAudit(string databaseName, string type)
+    {
+        try
+        {
+            _databaseManager.ActivateAuditALll(databaseName,type);
+            return Ok($"Auditoría activada exitosamente en la base de datos '{databaseName}'.");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error al activar la auditoría: {ex.Message}");
+        }
+    }
+   
 }

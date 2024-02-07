@@ -137,5 +137,31 @@ public class DatabaseManager
 
         return schemaList;
     }
+    public void ActivateAuditALll(string databaseName, string type )
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
 
+        using (var checkDatabaseCommand = new NpgsqlCommand($"SELECT datname FROM pg_database WHERE datname = '{databaseName}'", connection))
+        {
+            var existingDatabaseName = checkDatabaseCommand.ExecuteScalar();
+
+            if (existingDatabaseName == null || existingDatabaseName.ToString() != databaseName)
+            {
+                throw new Exception($"La base de datos '{databaseName}' no existe.");
+            }
+        }
+
+        using (var switchDatabaseCommand = new NpgsqlCommand($"SET search_path TO {databaseName}", connection))
+        {
+            switchDatabaseCommand.ExecuteNonQuery();
+        }
+
+        using (var auditCommand = new NpgsqlCommand($"ALTER DATABASE {databaseName} SET audit.config = '{type}'", connection))
+        {
+            auditCommand.ExecuteNonQuery();
+        }
+    }
+
+   
 }
