@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using System;
 using System.Data;
+using System.Diagnostics;
 
 public class DatabaseManager
 {
@@ -162,6 +163,84 @@ public class DatabaseManager
             auditCommand.ExecuteNonQuery();
         }
     }
+    public string GetAuditConfiguration(string databaseName)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+        using (var checkDatabaseCommand = new NpgsqlCommand($"SELECT datname FROM pg_database WHERE datname = '{databaseName}'", connection))
+        {
+            var existingDatabaseName = checkDatabaseCommand.ExecuteScalar();
 
-   
+            if (existingDatabaseName == null || existingDatabaseName.ToString() != databaseName)
+            {
+                throw new Exception($"La base de datos '{databaseName}' no existe.");
+            }
+        }
+
+        using (var switchDatabaseCommand = new NpgsqlCommand($"SET search_path TO {databaseName}", connection))
+        {
+            switchDatabaseCommand.ExecuteNonQuery();
+        }
+        using (var auditCommand = new NpgsqlCommand("SHOW audit.config", connection))
+        {
+            var auditConfig = auditCommand.ExecuteScalar();
+            return auditConfig?.ToString();
+        }
+    }
+    public void BackupDatabase(string databaseName, string backupFolderPath,string user)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+
+        using (var checkDatabaseCommand = new NpgsqlCommand($"SELECT datname FROM pg_database WHERE datname = '{databaseName}'", connection))
+        {
+            var existingDatabaseName = checkDatabaseCommand.ExecuteScalar();
+
+            if (existingDatabaseName == null || existingDatabaseName.ToString() != databaseName)
+            {
+                throw new Exception($"La base de datos '{databaseName}' no existe.");
+            }
+        }
+
+        var backupFileName = $"{databaseName}_backup_{DateTime.Now:yyyyMMddHHmmss}.backup";
+        var backupFilePath = System.IO.Path.Combine(backupFolderPath, backupFileName);
+
+        var processInfo = new ProcessStartInfo
+        {
+            FileName = "pg_dump",
+            Arguments = $"-h localhost -U {user} -d {databaseName} -F c -b -v -f \"{backupFilePath}\"",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using (var process = new Process { StartInfo = processInfo })
+        {
+            process.Start();
+            process.WaitForExit();
+        }
+    }
+    public void RestoreBackup( string backupFilePath, string newDatabaseName,string user)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+
+        // Utiliza el comando pg_restore para restaurar el respaldo
+        var processInfo = new ProcessStartInfo
+        {
+            FileName = "pg_restore",
+            Arguments = $"-h localhost -U {user} -d {newDatabaseName} -v \"{backupFilePath}\"",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using (var process = new Process { StartInfo = processInfo })
+        {
+            process.Start();
+            process.WaitForExit();
+        }
+    }
+
+
 }
